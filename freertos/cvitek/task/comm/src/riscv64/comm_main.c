@@ -16,6 +16,7 @@
 #include "intr_conf.h"
 #include "top_reg.h"
 #include "memmap.h"
+#include "milkv_duo_io.h"
 
 #include "comm.h"
 #include "cvi_spinlock.h"
@@ -267,6 +268,20 @@ void prvCmdQuRunTask(void *pvParameters)
 					// all isr of ip is disabled, and send msg back to linux
 					rtos_cmdq.ip_id = IP_SYSTEM;
 				}
+				break;
+			case CMD_DUO_LED:
+				rtos_cmdq.cmd_id = CMD_DUO_LED;
+				printf("recv cmd(%d) from C906B, param_ptr [0x%x]\n", rtos_cmdq.cmd_id, rtos_cmdq.param_ptr);
+				if (rtos_cmdq.param_ptr == DUO_LED_ON) {
+					duo_led_control(1);
+				} else {
+					duo_led_control(0);
+				}
+				rtos_cmdq.param_ptr = DUO_LED_DONE;
+				rtos_cmdq.resv.valid.rtos_valid = 1;
+				rtos_cmdq.resv.valid.linux_valid = 0;
+				printf("recv cmd(%d) from C906B...send [0x%x] to C906B\n", rtos_cmdq.cmd_id, rtos_cmdq.param_ptr);
+				goto send_label;
 			case SYS_CMD_INFO_LINUX:
 			default:
 send_label:
